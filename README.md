@@ -2,7 +2,7 @@
 
 # Checkout Finland Service Provider API
 
-2018-08-06
+2018-09-10
 
 Checkout Identification Service Broker allows Service Providers to implement strong electronic identification (Finnish bank credentials, Mobile ID) easily to websites and mobile apps via single API.
 
@@ -151,7 +151,7 @@ These id's and keys are used for the sandbox environment:
 
 ## Service Provider code example
 
-Currently there is PHP-based service provider demo application available. See `add link to the SP PHP-based repo`
+Currently there is PHP-based service provider demo application available. See https://github.com/CheckoutFinland/Identity-Service-Broker-integration-example .
 
 ## Libraries for Service Provider
 
@@ -177,7 +177,7 @@ Se learn more about OpenID Connect, see the specification: http://openid.net/spe
 
 asiakaspalvelu@checkout.fi
 0800 552 010 (0,00 €/min+ppm)
-Ma–su klo 6–23 (paitsi juhlapyhinä)
+Ma–su klo 6–23 (except on public holiday)
 
 ## Pricing
 
