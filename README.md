@@ -171,14 +171,16 @@ Jose-php can be used to decrypt and verify the identity token. See https://githu
 
 ## Extra material
 
-Se learn more about OpenID Connect, see the specification: http://openid.net/specs/openid-connect-core-1_0.html
+To learn more about OpenID Connect, see the specification: https://openid.net/specs/openid-connect-core-1_0.html
 
 ## Support
+If you have any questions please contact our support team:
 
-asiakaspalvelu@checkout.fi
-0800 552 010 (0,00 €/min+ppm)
-Ma–su klo 6–23 (except on public holiday)
+Email: [asiakaspalvelu@checkout.fi](mailto:asiakaspalvelu@checkout.fi)
+Phone: [+358800 552 010](tel:+358800552010)
+
+Support is available from Monday to Friday between 06–23 (except on public holidays).
 
 ## Pricing
 
-Pricing will be announced later in http://checkout.fi
+Pricing will be announced later in https://checkout.fi
