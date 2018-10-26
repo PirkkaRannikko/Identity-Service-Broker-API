@@ -15,7 +15,7 @@ To identify the user the Service Provider (your website) redirects the user to t
 - **Service Provider** is the service asking for the user identity.
 - **Identity Service Broker** is the Checkout service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
 - **Identity Provider** is a provider of identification, i.e. a Bank or mobile ID.
-- **Identification wall** is a list of Identity Providers shown on the UI. There are two options for this, either to use the inbuilt Identification Wall on the ISB or to display it on the Service Provider using the API provided by the ISB.
+- **Identification wall** is a list of Identity Providers shown on the UI. There are two options for this, either to use the built-in Identification Wall on the ISB or to display it on the Service Provider using the API provided by the ISB.
 
 ## Prerequisites
 
@@ -62,7 +62,7 @@ To identify users using the Identity Service Broker and the OIDC API for Service
 
 Checkout identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
 
-1. Service Provider directs the user to Checkout's service endpoint with parameters documented below. Scope shall not include `ftn_idp_id`
+1. Service Provider directs the user to Checkout's service endpoint with parameters documented below. `ftn_idp_id` shall not exist among request parameters
 2. Checkout lets the user identify themselves using a provider of their choosing.
 3. Once identified, the user is passed back to the Service Provider's `redirect_uri` with an access code.
 4. The Service Provider makes a direct API call to the Checkout API and gets an encrypted and signed identity token in exchange for the access code.
@@ -75,7 +75,7 @@ Checkout identification service uses the OpenID Connect Authorization Code flow.
 
 1. Service Provider uses the /api/embedded-ui/{client_id} API to get the data to display the Identification Wall on the UI
 2. Service Provider lets the user choose identity provider.
-3. Service Provider directs the user to Checkout's service endpoint with parameters documented below. Scope shall include `ftn_idp_id`
+3. Service Provider directs the user to Checkout's service endpoint with parameters documented below. `ftn_idp_id` shall be delivered as request parameter
 4. Once identified, the user is passed back to the Service Provider's `redirect_uri` with an access code.
 5. The Service Provider makes a direct API call to the Checkout API and gets an encrypted and signed identity token in exchange for the access code.
 
@@ -126,13 +126,14 @@ To initiate the identification process the service provider directs the user to 
 - **client_id** is the client identifier that specifies which service provider is asking for identification.
 - **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with Checkout (except when using the sandbox environment) to prevent other services misusing your credentials.
 - **response_type** value must be `code`.
-- **scope** is a comma separated list of scopes, or  basically sets of information requested. This must include `openid` and `personal_identification_code` . For example `openid profile personal_identity_code`. The `profile` includes `name`, `given_name`, `family_name` and `birthdate`. If the Service Provider's purpose for identifying the user is to create new identification methods, i.e. for example to create an user account with username and password, then the Service Provider must report such purpose by adding either `weak` (for weak identifiers, for example password account) or `strong` (for strong electronic identification) to the scopes. Using weak or strong as a purpose may affect pricing so please do check your contract and/or ask Checkout for advice. `ftn_idp_id` shall be delivered if the Identification Wall is on the Service Provider. It contains the id of the user chosen idp.
+- **scope** is a comma separated list of scopes, or  basically sets of information requested. This must include `openid` and `personal_identification_code` . For example `openid profile personal_identity_code`. The `profile` includes `name`, `given_name`, `family_name` and `birthdate`. If the Service Provider's purpose for identifying the user is to create new identification methods, i.e. for example to create an user account with username and password, then the Service Provider must report such purpose by adding either `weak` (for weak identifiers, for example password account) or `strong` (for strong electronic identification) to the scopes. Using weak or strong as a purpose may affect pricing so please do check your contract and/or ask Checkout for advice.
 
 The following optional parameters may be used:
 - **ui_locales** selects user interface language (`fi`, `sv` or `en`).
 - **nonce** value is passed on to identity token as is.
 - **prompt** can be set to `consent` to indicate that the user should be asked to consent to personal data being transferred. In this case the Identity Service Broker will display a verification screen after the user has been authenticated.
 - **state** is an opaque value you can use to maintain state between request and callback. Use of `state` is recommended.
+- **ftn_idp_id** shall be delivered if the Identification Wall is on the Service Provider. It contains the id of the user chosen idp.
 
 Example identification requests:
 
