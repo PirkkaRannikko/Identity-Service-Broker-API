@@ -2,22 +2,42 @@
 
 # Checkout Finland Service Provider API for Checkout Identity Service Broker
 
-2018-09-10
+2018-10-29
 
 Checkout Identification Service Broker allows Service Providers to implement strong electronic identification (Finnish bank credentials, Mobile ID) easily to websites and mobile apps via single API.
 
 To identify the user the Service Provider (your website) redirects the user to the Identification Service Broker (Checkout) with an authorization request. The user chooses the Identity Provider (a bank or Mobile ID) and is redirected there where he/she authenticates with his/her own credentials. Checkout will process the authentication result, and return the user to your website with verified information about the identity of the user.
 
-## Definitions
+Table of contents:
+1. Definitions
+2. Prerequisites
+3. Security concerns
+4. Flow with hosted Identity Service Broker UI
+5. Flow with embedded Identity Service Broker UI
+6. GET /api/embedded-ui/{client_id}
+7. GET /oauth/authorize/
+8. POST /oauth/token
+9. Identity token
+10. GET /oauth/profile
+11. Sandbox
+12. Service Provider code example
+13. Libraries for Service Provider
+14. Javascript
+15. PHP
+16. Extra material
+17. Support
+18. Pricing
+
+## 1. Definitions
 
 - **JWT** or JSON Web Token is a standard for wrapping attributes into a token. JWS is a signed and JWE an encrypted JWT token.
 - **OIDC** or OpenID Connect is a standard easy to use protocol for identifying and authenticating users.
-- **Service Provider** is the service asking for the user identity.
-- **Identity Service Broker** is the Checkout service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
-- **Identity Provider** is a provider of identification, i.e. a Bank or mobile ID.
-- **Identification wall** is a list of Identity Providers shown on the UI. There are two options for this, either to use the built-in Identification Wall on the ISB or to display it on the Service Provider using the API provided by the ISB.
+- **Service Provider (SP)** is the service asking for the user identity.
+- **Identity Service Broker (ISB)** is the Checkout service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
+- **Identity Provider (IdP)** is a provider of identification, i.e. a Bank or mobile ID.
+- **Identity Service Broker UI** is a list of Identity Providers shown on the UI. There are two options for displaying the UI. Service Provider can redirect the user to the hosted UI in the Identity Service Broker or embed the UI into its own UI.
 
-## Prerequisites
+## 2. Prerequisites
 
 To identify users using the Identity Service Broker and the OIDC API for Service Providers, you need the following pieces of configuration:
 
@@ -52,13 +72,13 @@ To identify users using the Identity Service Broker and the OIDC API for Service
   Identity tokens are signed by Checkout to protect their content. You must verify the signature against Checkout's certificate. Note that the certificate is rolled over at times. You should support having two valid certificates (old and new) to handle the transition to a new certificate without downtime. Checkout will provide you with the current RSA certificate. In the future you can get them from Checkout's Extranet.
 
 
-## Security concerns
+## 3. Security concerns
 
 - Client secret and private RSA key must be protected and not revealed to users.
 - Client secret and keys should be rotated every now and then.
 - Client secret or keys must not be sent to the user's browser. I.e. processing the identification should be done server side, not in browser side Javascript.
 
-## Flow with Identification Wall on the Identity Service Broker
+## 4. Flow with hosted Identity Service Broker UI
 
 Checkout identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
 
@@ -69,11 +89,11 @@ Checkout identification service uses the OpenID Connect Authorization Code flow.
 
 ![Flow graph](./flow.png?raw=true)
 
-## Flow with Identification Wall on the Service Provider
+## 5. Flow with embedded Identity Service Broker UI
 
 Checkout identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
 
-1. Service Provider uses the /api/embedded-ui/{client_id} API to get the data to display the Identification Wall on the UI
+1. Service Provider uses the /api/embedded-ui/{client_id} API to get the data to display the embedded Identity Service Broker UI on the SP UI.
 2. Service Provider lets the user choose identity provider.
 3. Service Provider directs the user to Checkout's service endpoint with parameters documented below. `ftn_idp_id` shall be delivered as request parameter
 4. Once identified, the user is passed back to the Service Provider's `redirect_uri` with an access code.
@@ -81,9 +101,9 @@ Checkout identification service uses the OpenID Connect Authorization Code flow.
 
 ![Flow graph](./embedded-ui-flow.png?raw=true)
 
-## GET /api/embedded-ui/{client_id}
+## 6. GET /api/embedded-ui/{client_id}
 
-To display the Identification Wall on the Service Provider the Service Provider shall use the /api/embedded-ui/{client_id} API of the Identity Service Broker to get the data needed to display the Identification Wall. Client_id is the client identifier that specifies which service provider is asking for identification. Service Provider does not need to use this API if it uses the flow with Identification Wall on the Identity Service Broker.
+To display the embedded Identity Service Broker UI the Service Provider shall use the /api/embedded-ui/{client_id} API of the Identity Service Broker to get the needed data. Client_id is the client identifier that specifies which service provider is asking for identification. Service Provider does not need to use this API if it uses the flow with hosted Identity Service Broker UI.
 
 The query string of the request can include the following optional parameter:
 - **lang** indicates the language for the returned data (`fi`, `sv` or `en`). If parameter is omitted the default language is `fi`.
@@ -119,7 +139,7 @@ Example of returned data:
 
 Service Provider needs to use and display these two fields `isbProviderInfo` and `isbConsent` on the UI.
 
-## GET /oauth/authorize/
+## 7. GET /oauth/authorize/
 
 To initiate the identification process the service provider directs the user to Checkout's OIDC endpoint either by redirect or by direct link. The query string of the request must include the following parameters:
 
@@ -133,7 +153,7 @@ The following optional parameters may be used:
 - **nonce** value is passed on to identity token as is.
 - **prompt** can be set to `consent` to indicate that the user should be asked to consent to personal data being transferred. In this case the Identity Service Broker will display a verification screen after the user has been authenticated.
 - **state** is an opaque value you can use to maintain state between request and callback. Use of `state` is recommended.
-- **ftn_idp_id** shall be delivered if the Identification Wall is on the Service Provider. It contains the id of the user chosen idp.
+- **ftn_idp_id** shall be delivered if the SP has the embedded Identity Service Broker UI. Parameter contains the id of the user chosen idp.
 
 Example identification requests:
 
@@ -155,7 +175,7 @@ Example return:
 
 `GET http://example-service-provider/?code=eyJh[....]_0w&state=77deb5b7f773ef6dafc12d9cf0588f57` using league/oauth2-client library on PHP
 
-## POST /oauth/token
+## 8. POST /oauth/token
 
 The actual user identity token from the token endpoint can be fetched using the /oauth/token API. The following parameters shall be included as request payload parameters:
 - **code** authorization code, which was returned in succesful /oauth/authorize/ reply. Mandatory.
@@ -199,7 +219,7 @@ Parameter explanations:
 - **expires_in** Expiration time of the Access Token in seconds since the response was generated
 - **id_token** Identity Token
 
-## Identity token
+## 9. Identity token
 
 The identity token is a JWT token that contains identity attributes about the user, for example name, date of birth or personal identity code. The token is signed by Checkout's RSA key. The signed token is embedded and encrypted into an JWE token using the service provider's public key.
 
@@ -231,7 +251,7 @@ Example:
 }
 ```
 
-## GET /oauth/profile
+## 10. GET /oauth/profile
 
 This API is the OIDC UserInfo Endpoint. There is no need to call this if Service Provider has already got all the needed user information in processing the reply from the /oauth/token.
 Service Provider can send request to the OIDC UserInfo Endpoint to obtain Claims about the End-User using an Access Token obtained from the /oauth/token API reply. The UserInfo Endpoint is an OAuth 2.0 [RFC6749] Protected Resource that complies with the OAuth 2.0 Bearer Token Usage [RFC6750] specification. The Access Token shall be sent using the Authorization header field as described below:
@@ -267,7 +287,7 @@ Example of returned data:
 }
 ```
 
-## Sandbox
+## 11. Sandbox
 
 The sandbox differs from the production in three major ways.
 
@@ -282,31 +302,31 @@ These id's and keys are used for the sandbox environment:
 - **Token decryption key**: See `sandbox-sp-key.pem`
 - **Signature verification key**: See `sandbox-isb-public-key.pem`
 
-## Service Provider code example
+## 12. Service Provider code example
 
 Currently there is PHP-based service provider demo application available. See https://github.com/CheckoutFinland/Identity-Service-Broker-integration-example .
 
-## Libraries for Service Provider
+## 13. Libraries for Service Provider
 
 See the examples directory for examples on how to implement a service provider based on various libraries and languages.
 
-### Javascript
+## 14. Javascript
 
 Bell is a simple library to take care of the OpenID Connect flow. See https://github.com/hapijs/bell .
 
 Node-jose can be used to decrypt and verify the identity token. See https://github.com/cisco/node-jose .
 
-### PHP
+## 15. PHP
 
 oauth2-client makes it simple to integrate your Service Provider application with Checkout ISB OpenID Connect flow. See https://github.com/thephpleague/oauth2-client .
 
 Jose-php can be used to decrypt and verify the identity token. See https://github.com/nov/jose-php .
 
-## Extra material
+## 16. Extra material
 
 To learn more about OpenID Connect, see the specification: https://openid.net/specs/openid-connect-core-1_0.html
 
-## Support
+## 17. Support
 If you have any questions please contact our support team:
 
 Email: [asiakaspalvelu@checkout.fi](mailto:asiakaspalvelu@checkout.fi)
@@ -314,6 +334,6 @@ Phone: [+358800 552 010](tel:+358800552010)
 
 Support is available from Monday to Friday between 06–23 (except on public holidays).
 
-## Pricing
+## 18. Pricing
 
 Pricing will be announced later in https://checkout.fi
