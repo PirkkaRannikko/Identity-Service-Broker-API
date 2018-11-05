@@ -139,6 +139,11 @@ Example of returned data:
 
 Service Provider needs to use and display these two fields `isbProviderInfo` and `isbConsent` on the UI.
 
+API errors:
+| Error | Description | Action |
+| --- | --- | --- |
+| 404 Not found / Service provider not found | the given client_id is not valid | error is shown on ISB |
+
 ## 7. GET /oauth/authorize/
 
 To initiate the identification process the service provider directs the user to Checkout's OIDC endpoint either by redirect or by direct link. The query string of the request must include the following parameters:
@@ -174,6 +179,15 @@ Example return:
 `GET https://example-service-provider.example/bell?code=eyJhb[...]4bGg&state=GIlBncQk4vsbThjMNBJ49G` using Hapi / Bell library on javascript
 
 `GET http://example-service-provider/?code=eyJh[....]_0w&state=77deb5b7f773ef6dafc12d9cf0588f57` using league/oauth2-client library on PHP
+
+API errors:
+| Error | Description | Action |
+| --- | --- | --- |
+| 400 Bad Request / invalid_request | if no valid SP can determined from parameters, redirect_uri is invalid or validation for state-parameter fails | error is shown on ISB |
+| invalid_request | request parameter validation fails | redirected to the SP with error |
+| invalid_scope | openid or personal_identity_code scope is missing. Validation fails | redirected to the SP with error |
+| login_required | prompt-parameter can't have "login" value | redirected to the SP with error |
+| invalid_ftn_idp_id | invalid ftn_idp_id given when SP has the embedded Identity Service Broker UI | redirected to the SP with error |
 
 ## 8. POST /oauth/token
 
@@ -212,6 +226,12 @@ Example of returned data:
   "id_token": "eyJl[...]Nw"
 }
 ```
+
+API errors:
+| Error | Description | Action |
+| --- | --- | --- |
+| 401 Unauthorized / invalid_client | the given client_id or client_secret is not valid | error is shown on ISB |
+| 400 Bad Request / invalid_grant | the token has already been exchanged or token validation failed | error is shown on ISB |
 
 Parameter explanations:
 - **access_token** Access Token for the /oauth/profile API (OIDC UserInfo Endpoint)
@@ -265,6 +285,12 @@ where `eyJh[...]2A` is the access_token.
 Example identification request:
 
 `GET https://isb.sandbox-isb.checkout-developer.fi/oauth/profile`
+
+API errors:
+| Error | Description | Action |
+| --- | --- | --- |
+| 401 Unauthorized / invalid_token | Invalid Access Token | error is shown on ISB |
+| 401 Unauthorized / invalid_client | the given client_id is not valid | error is shown on ISB |
 
 The API returns json data. The information received depends on the scope of identification request and on what attributes are available. Do note that not all sources of information have given name and family name available as separate attributes. The following attributes may be available currently:
 
