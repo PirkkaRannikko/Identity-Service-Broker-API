@@ -184,6 +184,7 @@ API errors:
 | Error | Description | Action |
 | --- | --- | --- |
 | 400 Bad Request / invalid_request | if no valid SP can determined from parameters, redirect_uri is invalid or validation for state-parameter fails | error is shown on ISB |
+| access_denied | authorization has been canceled | redirected to the SP with error |
 | invalid_request | request parameter validation fails | redirected to the SP with error |
 | invalid_scope | openid or personal_identity_code scope is missing. Validation fails | redirected to the SP with error |
 | login_required | prompt-parameter can't have "login" value | redirected to the SP with error |
