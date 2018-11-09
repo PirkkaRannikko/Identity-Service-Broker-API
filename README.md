@@ -140,6 +140,7 @@ Example of returned data:
 Service Provider needs to use and display these two fields `isbProviderInfo` and `isbConsent` on the UI.
 
 API errors:
+
 | Error | Description | Action |
 | --- | --- | --- |
 | 404 Not found / Service provider not found | the given client_id is not valid | error is shown on ISB |
@@ -181,6 +182,7 @@ Example return:
 `GET http://example-service-provider/?code=eyJh[....]_0w&state=77deb5b7f773ef6dafc12d9cf0588f57` using league/oauth2-client library on PHP
 
 API errors:
+
 | Error | Description | Action |
 | --- | --- | --- |
 | 400 Bad Request / invalid_request | if no valid SP can determined from parameters, redirect_uri is invalid or validation for state-parameter fails | error is shown on ISB |
@@ -229,6 +231,7 @@ Example of returned data:
 ```
 
 API errors:
+
 | Error | Description | Action |
 | --- | --- | --- |
 | 401 Unauthorized / invalid_client | the given client_id or client_secret is not valid | error is shown on ISB |
@@ -288,6 +291,7 @@ Example identification request:
 `GET https://isb.sandbox-isb.checkout-developer.fi/oauth/profile`
 
 API errors:
+
 | Error | Description | Action |
 | --- | --- | --- |
 | 401 Unauthorized / invalid_token | Invalid Access Token | error is shown on ISB |
