@@ -2,7 +2,7 @@
 
 # Checkout Finland Service Provider API for Checkout Identity Service Broker
 
-2018-10-29
+2018-12-04
 
 Checkout Identification Service Broker allows Service Providers to implement strong electronic identification (Finnish bank credentials, Mobile ID) easily to websites and mobile apps via single API.
 
@@ -51,15 +51,15 @@ To identify users using the Identity Service Broker and the OIDC API for Service
 
 * Checkout OIDC authorization endpoint
 
-  The Checkout OIDC authorization endpoint for production use is `https://isb.isb.checkout.fi/authorize`. For testing please use the sandbox endpoint `https://isb.sandbox-isb.checkout-developer.fi/authorize`.
+  The Checkout OIDC authorization endpoint for production use is `https://isb.isb.checkout.fi/authorize`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/authorize`.
 
 * Checkout OIDC token endpoint
 
-  The Checkout OIDC token endpoint for production use is `https://isb.isb.checkout.fi/token`. For testing please use the sandbox endpoint `https://isb.sandbox-isb.checkout-developer.fi/token`.
+  The Checkout OIDC token endpoint for production use is `https://isb.isb.checkout.fi/token`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/token`.
 
 * Checkout OIDC profile endpoint
 
-  The Checkout OIDC profile endpoint for production use is `https://isb.isb.checkout.fi/profile`. For testing please use the sandbox endpoint `https://isb.sandbox-isb.checkout-developer.fi/profile`. This endpoint provides exactly the same information as the token endpoint and as such is redundant.
+  The Checkout OIDC profile endpoint for production use is `https://isb.isb.checkout.fi/profile`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/profile`. This endpoint provides exactly the same information as the token endpoint and as such is redundant.
 
 * RSA keypair to decrypt identity token
 
@@ -110,9 +110,9 @@ The query string of the request can include the following optional parameter:
 
 Example API calls:
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/api/embedded-ui/example_service_provider`
+`GET https://isb.isb-sandbox.checkout-developer.fi/api/embedded-ui/example_service_provider`
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/api/embedded-ui/example_service_provider?lang=en`
+`GET https://isb.isb-sandbox.checkout-developer.fi/api/embedded-ui/example_service_provider?lang=en`
 
 The API returns json data.
 
@@ -122,17 +122,17 @@ Example of returned data:
   "identityProviders": [
     {
         "name": "Osuuspankki",
-        "imageUrl": "https://isb.sandbox-isb.checkout-developer.fi/public/images/idp/op_140x75.png",
+        "imageUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/idp/op_140x75.png",
         "ftn_idp_id": "fi-op-tupas"
     },
     {
         "name": "Nordea",
-        "imageUrl": "https://isb.sandbox-isb.checkout-developer.fi/public/images/idp/nordea_140x75.png",
+        "imageUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/idp/nordea_140x75.png",
         "ftn_idp_id": "fi-nordea-tupas"
     }
   ],
   "isbProviderInfo": "Identification is provided by Checkout Finland Oy",
-  "isbIconUrl": "https://isb.sandbox-isb.checkout-developer.fi/public/images/checkout.png",
+  "isbIconUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/checkout.png",
   "isbConsent": "By continuing, I accept that the service provider will receive my name and personal identity code"
 }
 ```
@@ -163,11 +163,11 @@ The following optional parameters may be used:
 
 Example identification requests:
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/oauth/authorize?client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile`
+`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile`
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/oauth/authorize?prompt=consent&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile%20strong`
+`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?prompt=consent&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile%20strong`
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/oauth/authorize?ftn_idp_id=op&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fdsp.sandbox-isb.checkout-developer.fi%2Fbell&state=nRL4A7Xul4GSF_Z5mkEN8_&scope=openid%20profile%20personal_identity_code`
+`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?ftn_idp_id=op&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fdsp.isb-sandbox.checkout-developer.fi%2Fbell&state=nRL4A7Xul4GSF_Z5mkEN8_&scope=openid%20profile%20personal_identity_code`
 
 
 Once the identification process is done or if there is a recoverable error, the user is directed back to the service provider to the URI specified in the request. The following parameters are included in the query string:
@@ -216,7 +216,7 @@ The authorization code can only be used once.
 
 Example identification request:
 
-`POST https://isb.sandbox-isb.checkout-developer.fi/oauth/token`
+`POST https://isb.isb-sandbox.checkout-developer.fi/oauth/token`
 
 The API returns json data.
 
@@ -288,7 +288,7 @@ where `eyJh[...]2A` is the access_token.
 
 Example identification request:
 
-`GET https://isb.sandbox-isb.checkout-developer.fi/oauth/profile`
+`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/profile`
 
 API errors:
 
