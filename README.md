@@ -198,24 +198,19 @@ The actual user identity token from the token endpoint can be fetched using the 
 - **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with Checkout (except when using the sandbox environment) to prevent other services misusing your credentials. Mandatory.
 - **grant_type** needs to have value `authorization_code`. Mandatory.
 - **client_id** is the client identifier that specifies which service provider is asking for identification. Not needed if `authorization` header is used.
-- **client_secret** A shared secret (a password really) to authenticate your service to the Checkout API. Not needed if `authorization` header is used.
+- **client_assertion_type** must be `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`.
+- **client_assertion** is a signed JWS authentication token.
 
-The request can be authenticated by HTTP Basic Auth with client id and client secret. Use the client id as the username and client secret as the password in the standard `Authorization` header. The header value is the word `Basic` followed by a space and a base64 encoded string of username and password joined by a colon (`:`) as described below:
-
-```
-Authorization: Basic czZCaGRSa3F0Mzo3RmpmcDBaQnIxS3REUmJuZlZkbUl3
-```
-
-where `czZCaGRSa3F0Mzo3RmpmcDBaQnIxS3REUmJuZlZkbUl3` is an example value
-
-
-Using `authorization` header is not mandatory if the `clientId`and the `clientSecret` parameters are included in the request payload.
-
-The authorization code can only be used once.
+The client_assertion is signed using the SP's signing key and must contain the following claims:
+- **iss** Issuer. This must contain the client_id.
+- **sub** Subject. This must contain the client_id.
+- **aud** Audience. The aud (audience) Claim. ISB's token endpoint URL.
+- **jti** JWT ID. A unique identifier for the token, which can be used to prevent reuse of the token. These tokens must only be used once.
+- **exp** Expiration time for the token. This is seconds since UNIX epoch (UTC). Suggested time is 600 seconds in the future.
 
 Example identification request:
 
-`POST https://isb.isb-sandbox.checkout-developer.fi/oauth/token`
+`POST https://isb-test.op.fi/oauth/token`
 
 The API returns json data.
 
@@ -233,20 +228,20 @@ API errors:
 
 | Error | Description | Action |
 | --- | --- | --- |
-| 401 Unauthorized / invalid_client | the given client_id or client_secret is not valid | error is shown on ISB |
+| 401 Unauthorized / invalid_client | the given client_id is not valid | error is shown on ISB |
 | 400 Bad Request / invalid_grant | the token has already been exchanged or token validation failed | error is shown on ISB |
 
 Parameter explanations:
 - **access_token** Access Token for the /oauth/profile API (OIDC UserInfo Endpoint)
-- **token_type** OAuth 2.0 Token Type value. The value is allways `Bearer`
+- **token_type** OAuth 2.0 Token Type value. The value is always `Bearer`
 - **expires_in** Expiration time of the Access Token in seconds since the response was generated
 - **id_token** Identity Token
 
 ## 9. Identity token
 
-The identity token is a JWT token that contains identity attributes about the user, for example name, date of birth or personal identity code. The token is signed by Checkout's RSA key. The signed token is embedded and encrypted into an JWE token using the service provider's public key.
+The identity token is a JWT token that contains identity attributes about the user, for example name, date of birth or personal identity code. The token is signed by OP's RSA key. The signed token is embedded and encrypted into an JWE token using the service provider's public key.
 
-To obtain the user attributes from the identity token you need to first decrypt the JWE token (`id_token`) received from the '/oauth/token' API. Decryption is done using the Service Provider private RSA key. The decrypted JWS token is signed using Checkout's RSA certificate to prevent tampering. Service Provider needs to verify that the signature is valid using the JWT library of your choice. The payload of the JWS token embedded in the JWE token contains user information.
+To obtain the user attributes from the identity token you need to first decrypt the JWE token (`id_token`) received from the '/oauth/token' API. Decryption is done using the Service Provider private RSA key. The decrypted JWS token is signed using OP's RSA certificate to prevent tampering. Service Provider needs to verify that the signature is valid using the JWT library of your choice. The payload of the JWS token embedded in the JWE token contains user information.
 
 The information received depends on the scope of identification request and on what attributes are available. Do note that not all sources of information have given name and family name available as separate attributes. The following attributes may be available currently:
 
@@ -287,7 +282,7 @@ where `eyJh[...]2A` is the access_token.
 
 Example identification request:
 
-`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/profile`
+`GET https://isb-test.op.fi/oauth/profile`
 
 API errors:
 
@@ -323,22 +318,21 @@ Example of returned data:
 
 ## 13. Public Sandbox for customer testing
 
-The sandbox differs from the production in three major ways.
+The public Sandbox differs from the production in three major ways.
 
-- The sandbox environment provides test data instead of real personal information.
-- To use the sandbox environment you need to use the separate API endpoints described above.
-- Common shared credentials and client id are used for the sandbox environment.
+- The Sandbox environment provides test data instead of real personal information.
+- To use the Sandbox environment you need to use the separate API endpoints described above.
+- Common shared credentials and client id are used for the Sandbox environment. Because the sandbox does not require registration all developers need to use the provided SP keys (instead of their own keys).
 
-These id's and keys are used for the sandbox environment:
+These id's and keys are used for the Sandbox environment:
 
 - **Client identifier**: saippuakauppias
-- **Client secret**: correct-horse-battery-staple
 - **Token decryption key**: See `sandbox-sp-key.pem`
 - **Signature verification key**: See `sandbox-isb-public-key.pem`
 
 ## 14. Service Provider code example
 
-Currently there is PHP-based service provider demo application available. See https://github.com/CheckoutFinland/Identity-Service-Broker-integration-example .
+Currently there is PHP-based service provider demo application available. See https://github.com/CheckoutFinland/Identity-Service-Broker-integration-example . NOTE! This is currently work in progress and has not been updated to match this documentation.
 
 ## 15. Libraries for Service Provider
 
@@ -346,7 +340,7 @@ See the examples directory for examples on how to implement a service provider b
 
 ## 16. Javascript
 
-Bell is a simple library to take care of the OpenID Connect flow. See https://github.com/hapijs/bell .
+Bell is a simple library to take care of the OpenID Connect flow, but it needs to be modified slightly due to the signing purposes. See https://github.com/hapijs/bell . Currently we use forked bell library.
 
 Node-jose can be used to decrypt and verify the identity token. See https://github.com/cisco/node-jose .
 
@@ -361,13 +355,12 @@ Jose-php can be used to decrypt and verify the identity token. See https://githu
 To learn more about OpenID Connect, see the specification: https://openid.net/specs/openid-connect-core-1_0.html
 
 ## 19. Support
-If you have any questions please contact our support team:
+If you have feature requests or technical problems please submit an issue on Github.
 
-Email: [asiakaspalvelu@checkout.fi](mailto:asiakaspalvelu@checkout.fi)
-Phone: [+358800 552 010](tel:+358800552010)
+For customer support please contact
+- **corporate customers** +358 100 05151
+- **email** verkkopainikkeet@op.fi
 
-Support is available from Monday to Friday between 06–23 (except on public holidays).
+## 20. Sales
 
-## 20. Pricing
-
-Pricing will be announced later in https://checkout.fi
+Please contact your own branch on contract matters. 
