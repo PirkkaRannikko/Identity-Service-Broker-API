@@ -82,24 +82,24 @@ To generate a 2048 bit RSA key run the command `openssl genrsa -out private.pem 
 
 ## 4. Flow with hosted Identity Service Broker UI
 
-Checkout identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
+  OP identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
 
-1. Service Provider directs the user to Checkout's service endpoint with parameters documented below. `ftn_idp_id` shall not exist among request parameters
-2. Checkout lets the user identify themselves using a provider of their choosing.
+1. Service Provider directs the user to OP's service endpoint with parameters documented below. `ftn_idp_id` shall not exist among request parameters
+2. OP lets the user identify themselves using a provider of their choosing.
 3. Once identified, the user is passed back to the Service Provider's `redirect_uri` with an access code.
-4. The Service Provider makes a direct API call to the Checkout API and gets an encrypted and signed identity token in exchange for the access code.
+4. The Service Provider makes a direct API call to the OP API and gets an encrypted and signed identity token in exchange for the access code.
 
 ![Flow graph](./flow.png?raw=true)
 
 ## 5. Flow with embedded Identity Service Broker UI
 
-Checkout identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
+  OP identification service uses the OpenID Connect Authorization Code flow. I.e. the following steps are taken to identify a user:
 
 1. Service Provider uses the /api/embedded-ui/{client_id} API to get the data to display the embedded Identity Service Broker UI on the SP UI.
 2. Service Provider lets the user choose identity provider.
-3. Service Provider directs the user to Checkout's service endpoint with parameters documented below. `ftn_idp_id` shall be delivered as request parameter
+3. Service Provider directs the user to OP's service endpoint with parameters documented below. `ftn_idp_id` shall be delivered as request parameter
 4. Once identified, the user is passed back to the Service Provider's `redirect_uri` with an access code.
-5. The Service Provider makes a direct API call to the Checkout API and gets an encrypted and signed identity token in exchange for the access code.
+5. The Service Provider makes a direct API call to the OP API and gets an encrypted and signed identity token in exchange for the access code.
 
 ![Flow graph](./embedded-ui-flow.png?raw=true)
 
@@ -112,9 +112,9 @@ The query string of the request can include the following optional parameter:
 
 Example API calls:
 
-`GET https://isb.isb-sandbox.checkout-developer.fi/api/embedded-ui/example_service_provider`
+`GET https://isb-test.op.fi/api/embedded-ui/example_service_provider`
 
-`GET https://isb.isb-sandbox.checkout-developer.fi/api/embedded-ui/example_service_provider?lang=en`
+`GET https://isb-test.op.fi/api/embedded-ui/example_service_provider?lang=en`
 
 The API returns json data.
 
@@ -124,17 +124,16 @@ Example of returned data:
   "identityProviders": [
     {
         "name": "Osuuspankki",
-        "imageUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/idp/op_140x75.png",
-        "ftn_idp_id": "fi-op-tupas"
+        "imageUrl": "https://isb-test.op.fi/public/images/idp/op_140x75.png",
+        "ftn_idp_id": "fi-op"
     },
     {
         "name": "Nordea",
-        "imageUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/idp/nordea_140x75.png",
-        "ftn_idp_id": "fi-nordea-tupas"
+        "imageUrl": "https://isb-test.op.fi/public/images/idp/nordea_140x75.png",
+        "ftn_idp_id": "fi-nordea"
     }
   ],
-  "isbProviderInfo": "Identification is provided by Checkout Finland Oy",
-  "isbIconUrl": "https://isb.isb-sandbox.checkout-developer.fi/public/images/checkout.png",
+  "isbProviderInfo": "OP Identity Service Broker is provided by OP Financial Group member cooperative banks and OP Corporate  Bank plc",
   "isbConsent": "By continuing, I accept that the service provider will receive my name and personal identity code"
 }
 ```
@@ -149,12 +148,12 @@ API errors:
 
 ## 7. GET /oauth/authorize/
 
-To initiate the identification process the service provider directs the user to Checkout's OIDC endpoint either by redirect or by direct link. The query string of the request must include the following parameters:
+To initiate the identification process the service provider directs the user to OP's OIDC endpoint either by redirect or by direct link. The request parameters are passed to the ISB in a signed JWS token. The token is sent in the query string as `request` parameter. The following parameters are supported in the authorization request:
 
 - **client_id** is the client identifier that specifies which service provider is asking for identification.
-- **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with Checkout (except when using the sandbox environment) to prevent other services misusing your credentials.
+- **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with OP (except when using the sandbox environment) to prevent other services misusing your credentials.
 - **response_type** value must be `code`.
-- **scope** is a comma separated list of scopes, or  basically sets of information requested. This must include `openid` and `personal_identification_code` . For example `openid profile personal_identity_code`. The `profile` includes `name`, `given_name`, `family_name` and `birthdate`. If the Service Provider's purpose for identifying the user is to create new identification methods, i.e. for example to create an user account with username and password, then the Service Provider must report such purpose by adding either `weak` (for weak identifiers, for example password account) or `strong` (for strong electronic identification) to the scopes. Using weak or strong as a purpose may affect pricing so please do check your contract and/or ask Checkout for advice.
+- **scope** is a comma separated list of scopes, or  basically sets of information requested. This must include `openid` and `personal_identification_code` . For example `openid profile personal_identity_code`. The `profile` includes `name`, `given_name`, `family_name` and `birthdate`. If the Service Provider's purpose for identifying the user is to create new identification methods, i.e. for example to create an user account with username and password, then the Service Provider must report such purpose by adding either `weak` (for weak identifiers, for example password account) or `strong` (for strong electronic identification which is only for members of the Finnish Trust Network) to the scopes. Using weak or strong as a purpose may affect pricing and depends on your contract.
 
 The following optional parameters may be used:
 - **ui_locales** selects user interface language (`fi`, `sv` or `en`).
@@ -163,14 +162,11 @@ The following optional parameters may be used:
 - **state** is an opaque value you can use to maintain state between request and callback. Use of `state` is recommended.
 - **ftn_idp_id** shall be delivered if the SP has the embedded Identity Service Broker UI. Parameter contains the id of the user chosen idp.
 
-Example identification requests:
+The JWS must be signed with the RS256 algorithm with SP's signing key. 
 
-`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile`
+Example identification request:
 
-`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?prompt=consent&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fexample-service-provider.example%2Fbell&state=GIlBncQk4vsbThjMNBJ49G&scope=openid%20profile%20strong`
-
-`GET https://isb.isb-sandbox.checkout-developer.fi/oauth/authorize?ftn_idp_id=op&client_id=example_service_provider&response_type=code&redirect_uri=https%3A%2F%2Fdsp.isb-sandbox.checkout-developer.fi%2Fbell&state=nRL4A7Xul4GSF_Z5mkEN8_&scope=openid%20profile%20personal_identity_code`
-
+`GET https://isb-test.op.fi/oauth/authorize?request=eyJhb[...]`
 
 Once the identification process is done or if there is a recoverable error, the user is directed back to the service provider to the URI specified in the request. The following parameters are included in the query string:
 - **state** is passed as is from the request.
@@ -190,6 +186,7 @@ API errors:
 | 400 Bad Request / invalid_request | if no valid SP can determined from parameters, redirect_uri is invalid or validation for state-parameter fails | error is shown on ISB |
 | access_denied | authorization has been canceled | redirected to the SP with error |
 | invalid_request | request parameter validation fails | redirected to the SP with error |
+| invalid_request_object | request JWS validation fails | redirected to the SP with error |
 | invalid_scope | openid or personal_identity_code scope is missing. Validation fails | redirected to the SP with error |
 | login_required | prompt-parameter can't have "login" value | redirected to the SP with error |
 | invalid_ftn_idp_id | invalid ftn_idp_id given when SP has the embedded Identity Service Broker UI | redirected to the SP with error |
