@@ -1,12 +1,12 @@
-![Checkout Finland](checkout-logo-vaaka.svg)
+# Service Provider API for OP Identity Service Broker
 
-# Checkout Finland Service Provider API for Checkout Identity Service Broker
+2019-03-28 (DRAFT. Expires in 2019-04-12)
 
-2018-12-04
+NOTE! The API endpoints are not yet live. 
 
-Checkout Identification Service Broker allows Service Providers to implement strong electronic identification (Finnish bank credentials, Mobile ID) easily to websites and mobile apps via single API.
+OP Identification Service Broker allows Service Providers to implement strong electronic identification (Finnish bank credentials, Mobile ID) easily to websites and mobile apps via single API.
 
-To identify the user the Service Provider (your website) redirects the user to the Identification Service Broker (Checkout) with an authorization request. The user chooses the Identity Provider (a bank or Mobile ID) and is redirected there where he/she authenticates with his/her own credentials. Checkout will process the authentication result, and return the user to your website with verified information about the identity of the user.
+To identify the user the Service Provider (your website) redirects the user to the Identification Service Broker (OP) with an authorization request. The user chooses the Identity Provider (a bank or Mobile ID) and is redirected there where he/she authenticates with his/her own credentials. OP will process the authentication result, and return the user to your website with verified information about the identity of the user.
 
 Table of contents:
 1. Definitions
@@ -19,23 +19,26 @@ Table of contents:
 8. POST /oauth/token
 9. Identity token
 10. GET /oauth/profile
-11. Sandbox
-12. Service Provider code example
-13. Libraries for Service Provider
-14. Javascript
-15. PHP
-16. Extra material
-17. Support
-18. Pricing
+11. GET /.well-known/openid-configuration
+12. JWKS
+13. Public Sandbox for customer testing
+14. Service Provider code example
+15. Libraries for Service Provider
+16. Javascript
+17. PHP
+18. Extra material
+19. Support
+20. Pricing
 
 ## 1. Definitions
 
-- **JWT** or JSON Web Token is a standard for wrapping attributes into a token. JWS is a signed and JWE an encrypted JWT token.
-- **OIDC** or OpenID Connect is a standard easy to use protocol for identifying and authenticating users.
 - **Service Provider (SP)** is the service asking for the user identity.
 - **Identity Service Broker (ISB)** is the Checkout service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
 - **Identity Provider (IdP)** is a provider of identification, i.e. a Bank or mobile ID.
 - **Identity Service Broker UI** is a list of Identity Providers shown on the UI. There are two options for displaying the UI. Service Provider can redirect the user to the hosted UI in the Identity Service Broker or embed the UI into its own UI.
+- **OIDC** or OpenID Connect is a standard easy to use protocol for identifying and authenticating users.
+- **JWT** or JSON Web Token is a standard for wrapping attributes into a token. JWS is a signed and JWE an encrypted JWT token.
+- **JWKS** JSON Web Key Set is a standard way to exchange public keys between SP and ISB.
 
 ## 2. Prerequisites
 
@@ -43,40 +46,39 @@ To identify users using the Identity Service Broker and the OIDC API for Service
 
 * Client identifier
 
-  Your service is identified by a unique client identifier string, which Checkout will generate for you. Basically this is the Merchant ID you get when you place on order to Checkout in https://checkout.fi/verkkokauppiaalle/tilaus/ .
+  Your service is identified by a unique client identifier string, which OP will generate for you during the onboarding process.
 
-* Client secret
+* OP OIDC authorization endpoint
 
-  A shared secret (a password really) to authenticate your service to the Checkout API. Checkout will generate the client secret and provide it to you. In the future you can get from Checkout’s Extranet.
+  The OP OIDC authorization endpoint for production use is `https://isb.op.fi/authorize`. For testing please use the sandbox endpoint `https://isb-test.op.fi/authorize`.
 
-* Checkout OIDC authorization endpoint
+* OP OIDC token endpoint
 
-  The Checkout OIDC authorization endpoint for production use is `https://isb.isb.checkout.fi/authorize`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/authorize`.
+  The OP OIDC token endpoint for production use is `https://isb.op.fi/token`. For testing please use the sandbox endpoint `https://isb-test.op.fi/token`.
 
-* Checkout OIDC token endpoint
+* OP OIDC profile endpoint
 
-  The Checkout OIDC token endpoint for production use is `https://isb.isb.checkout.fi/token`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/token`.
-
-* Checkout OIDC profile endpoint
-
-  The Checkout OIDC profile endpoint for production use is `https://isb.isb.checkout.fi/profile`. For testing please use the sandbox endpoint `https://isb.isb-sandbox.checkout-developer.fi/profile`. This endpoint provides exactly the same information as the token endpoint and as such is redundant.
+  The OP OIDC profile endpoint for production use is `https://isb.op.fi/profile`. For testing please use the sandbox endpoint `https://isb-test.op.fi/profile`. This endpoint provides exactly the same information as the token endpoint and as such is redundant.
+  
+* RSA keypair to sign requests
+ 
+   Signing is used for verifying that requests originate from the SP. Signing is used in requests to two endpoints: /oauth/authorize and /oauth/token.
+ 
+To generate a 2048 bit RSA key run the command `openssl genrsa -out private.pem 2048` (you could replace the filename private.pem with one of your own choosing).
 
 * RSA keypair to decrypt identity token
 
-  Checkout will encrypt the identity token identifying the user with your public key and you will have to decrypt it with your private key.
+  OP will encrypt the identity token identifying the user with your public key and you will have to decrypt it with your private key. Keys are generated the same way as signing keys. Both encryption and signing public keys must be published in the SP's JKWS endpoint. Keep the private portions of these keypairs private.
 
-  To generate a 2048 bit RSA key run the command `openssl genrsa -out private.pem 2048` (you could replace the filename private.pem with one of your own choosing). Keep this key private. To export the public portion, run the command `openssl rsa -in private.pem -pubout`. Register the public key with Checkout, but make sure the key you share begins with `-----BEGIN PUBLIC KEY-----`. Checkout will provide an initial keypair for you. In the future you can set them from Checkout's Extranet.
+* OP JWKS endpoint
 
-* Checkout's RSA certificate
-
-  Identity tokens are signed by Checkout to protect their content. You must verify the signature against Checkout's certificate. Note that the certificate is rolled over at times. You should support having two valid certificates (old and new) to handle the transition to a new certificate without downtime. Checkout will provide you with the current RSA certificate. In the future you can get them from Checkout's Extranet.
-
+  Identity tokens are signed by OP to protect their content. You must verify the signature against OP's public key which can be fetched from the OP JWKS endpoint `https://isb.op.fi/jwks/broker`. For testing please use the sandbox endpoint `https://isb-test.op.fi/jwks/broker`. Note that the keys are rolled over at times. The endpoint may contain several valid keys. You may safely cache keys for at most one day. When fetching keys from endpoint you must verify the TLS certificate to ensure that the keys are genuine.
 
 ## 3. Security concerns
 
-- Client secret and private RSA key must be protected and not revealed to users.
-- Client secret and keys should be rotated every now and then.
-- Client secret or keys must not be sent to the user's browser. I.e. processing the identification should be done server side, not in browser side Javascript.
+- Private RSA keys must be protected and not revealed to users.
+- The keys should be rotated every now and then. When depracating a key you should remove it from your JWKS endpoint at least one day before deactivating it to prevent disruptions to service. We may cache your public keys for up to one day on the ISB.
+- Keys must not be sent to the user's browser. I.e. processing the identification should be done server side, not in browser side Javascript.
 
 ## 4. Flow with hosted Identity Service Broker UI
 
@@ -318,7 +320,11 @@ Example of returned data:
 }
 ```
 
-## 11. Sandbox
+## 11. GET /.well-known/openid-configuration
+
+## 12. JWKS
+
+## 13. Public Sandbox for customer testing
 
 The sandbox differs from the production in three major ways.
 
@@ -333,31 +339,31 @@ These id's and keys are used for the sandbox environment:
 - **Token decryption key**: See `sandbox-sp-key.pem`
 - **Signature verification key**: See `sandbox-isb-public-key.pem`
 
-## 12. Service Provider code example
+## 14. Service Provider code example
 
 Currently there is PHP-based service provider demo application available. See https://github.com/CheckoutFinland/Identity-Service-Broker-integration-example .
 
-## 13. Libraries for Service Provider
+## 15. Libraries for Service Provider
 
 See the examples directory for examples on how to implement a service provider based on various libraries and languages.
 
-## 14. Javascript
+## 16. Javascript
 
 Bell is a simple library to take care of the OpenID Connect flow. See https://github.com/hapijs/bell .
 
 Node-jose can be used to decrypt and verify the identity token. See https://github.com/cisco/node-jose .
 
-## 15. PHP
+## 17. PHP
 
 oauth2-client makes it simple to integrate your Service Provider application with Checkout ISB OpenID Connect flow. See https://github.com/thephpleague/oauth2-client .
 
 Jose-php can be used to decrypt and verify the identity token. See https://github.com/nov/jose-php .
 
-## 16. Extra material
+## 18. Extra material
 
 To learn more about OpenID Connect, see the specification: https://openid.net/specs/openid-connect-core-1_0.html
 
-## 17. Support
+## 19. Support
 If you have any questions please contact our support team:
 
 Email: [asiakaspalvelu@checkout.fi](mailto:asiakaspalvelu@checkout.fi)
@@ -365,6 +371,6 @@ Phone: [+358800 552 010](tel:+358800552010)
 
 Support is available from Monday to Friday between 06–23 (except on public holidays).
 
-## 18. Pricing
+## 20. Pricing
 
 Pricing will be announced later in https://checkout.fi
