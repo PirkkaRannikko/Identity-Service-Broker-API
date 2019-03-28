@@ -1,6 +1,6 @@
 # Service Provider API for OP Identity Service Broker
 
-2019-03-28 (DRAFT. Expires in 2019-04-12)
+2019-03-28 (DRAFT. Expires on 2019-04-12.)
 
 NOTE! The API endpoints are not yet live. 
 
@@ -33,7 +33,7 @@ Table of contents:
 ## 1. Definitions
 
 - **Service Provider (SP)** is the service asking for the user identity.
-- **Identity Service Broker (ISB)** is the Checkout service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
+- **Identity Service Broker (ISB)** is the OP service that lets the user choose an identity provider and that passes the requested user identity information to the service provider.
 - **Identity Provider (IdP)** is a provider of identification, i.e. a Bank or mobile ID.
 - **Identity Service Broker UI** is a list of Identity Providers shown on the UI. There are two options for displaying the UI. Service Provider can redirect the user to the hosted UI in the Identity Service Broker or embed the UI into its own UI.
 - **OIDC** or OpenID Connect is a standard easy to use protocol for identifying and authenticating users.
@@ -195,7 +195,7 @@ API errors:
 
 The actual user identity token from the token endpoint can be fetched using the /oauth/token API. The following parameters shall be included as request payload parameters:
 - **code** authorization code, which was returned in succesful /oauth/authorize/ reply. Mandatory.
-- **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with Checkout (except when using the sandbox environment) to prevent other services misusing your credentials. Mandatory.
+- **redirect_uri** specifies to which URI on your site (the service provider) you want the user to return to once identification is done. This URI must be registered with OP (except when using the sandbox environment) to prevent other services misusing your credentials. Mandatory.
 - **grant_type** needs to have value `authorization_code`. Mandatory.
 - **client_id** is the client identifier that specifies which service provider is asking for identification. Not needed if `authorization` header is used.
 - **client_assertion_type** must be `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`.
