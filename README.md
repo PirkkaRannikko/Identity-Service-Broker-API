@@ -314,7 +314,30 @@ Example of returned data:
 
 ## 11. GET /.well-known/openid-configuration
 
+We provide an optional OpenID Discovery metadata endpoint. It may be used to configure OAuth2 client implementations should they require it. For example: `GET https://isb-test.op.fi/.well-known/openid-configuration`.
+
 ## 12. JWKS
+
+The JWKS endpoints are used to exchange public keys between parties. Both SP and ISB have a JWKS endpoint to publish their own public keys. The SP's JWKS endpoint URL has to be registered with OP. The ISB's JWKS endpoint is publicly available.
+
+For example: `GET https://isb-test.op.fi/jwks/broker`.
+
+Example response:
+
+```json
+{
+  "keys":[
+    {
+      "kty":"RSA",
+      "kid":"-DNF8ccKbmJ-oPVyeoIRaER4x8BI5Sqhvyr-UPk4Do4",
+      "use":"sig",
+      "n":"w1f2iqKttSHq8U93wGQMFyx11NtGMU_XOm8nitErtCRfdTUFlNmNq-4bbhn3Y9nY2yMqhJAJPubLVaTmdmAHy9NY45nrRVAXcIcazaKmcHLlNFNqFqMgrd3SwDE0nMB7SjwC0OwUBXIB97awWrcryZq79vIly9xtha63osbdXBSJI2E7CdOZaUBSo_jQl1Mp4Kn525yHCTqdrwze6u3JMqsKsrDojc_4HcFLQicHgaq5cKy1qSBO_D1P8PsDT7BRuHXqKewzAp4Tg-EYoVv32cEWXMJuCFG5fkImUh_oefY48I-Bp9eGaGV0H3nMF_xng0UZJ03-vAayetforXsmaw",
+      "e":"AQAB"
+    }
+  ]
+}
+```
+TODO: key rollover should be described in more detail.
 
 ## 13. Public Sandbox for customer testing
 
@@ -346,7 +369,7 @@ Node-jose can be used to decrypt and verify the identity token. See https://gith
 
 ## 17. PHP
 
-oauth2-client makes it simple to integrate your Service Provider application with Checkout ISB OpenID Connect flow. See https://github.com/thephpleague/oauth2-client .
+oauth2-client makes it simple to integrate your Service Provider application with OP ISB OpenID Connect flow. See https://github.com/thephpleague/oauth2-client .
 
 Jose-php can be used to decrypt and verify the identity token. See https://github.com/nov/jose-php .
 
